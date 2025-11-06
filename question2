@@ -1,0 +1,54 @@
+// 1️⃣ Find the total amount spent by each customer
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customerId",
+      totalSpent: { $sum: "$amount" }
+    }
+  }
+]);
+
+// 2️⃣ Retrieve order details along with corresponding customer information
+db.orders.aggregate([
+  {
+    $lookup: {
+      from: "customers",
+      localField: "customerId",
+      foreignField: "_id",
+      as: "customerDetails"
+    }
+  }
+]);
+
+// 3️⃣ Find orders where the amount is greater than Rs. 500
+db.orders.aggregate([
+  {
+    $match: { amount: { $gt: 500 } }
+  }
+]);
+
+// 4️⃣ Calculate the average order amount per customer
+db.orders.aggregate([
+  {
+    $group: {
+      _id: "$customerId",
+      averageAmount: { $avg: "$amount" }
+    }
+  }
+]);
+
+// 5️⃣ Retrieve all orders with customer details,
+// ensuring each order has an associated customer record (i.e., inner join)
+db.orders.aggregate([
+  {
+    $lookup: {
+      from: "customers",
+      localField: "customerId",
+      foreignField: "_id",
+      as: "customerDetails"
+    }
+  },
+  {
+    $match: { customerDetails: { $ne: [] } }
+  }
+]);
