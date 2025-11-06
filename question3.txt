@@ -1,0 +1,104 @@
+// 1️⃣ Top 3 best-selling products by quantity sold
+db.orders.aggregate([
+  { $group: { _id: "$productName", totalQuantity: { $sum: "$quantity" } } },
+  { $sort: { totalQuantity: -1 } },
+  { $limit: 3 }
+]);
+
+// 2️⃣ Total revenue for each product category
+db.orders.aggregate([
+  { $group: { _id: "$category", totalRevenue: { $sum: "$totalPrice" } } }
+]);
+
+// 3️⃣ Average total price of all orders
+db.orders.aggregate([
+  { $group: { _id: null, avgOrderPrice: { $avg: "$totalPrice" } } }
+]);
+
+// 4️⃣ Number of orders placed each month
+db.orders.aggregate([
+  {
+    $group: {
+      _id: { $month: { $toDate: "$orderDate" } },
+      orderCount: { $sum: 1 }
+    }
+  },
+  { $sort: { "_id": 1 } },
+  {
+    $project: {
+      _id: 0,
+      month: "$_id",
+      orderCount: 1
+    }
+  }
+]);
+
+// 5️⃣ Percentage of canceled orders
+db.orders.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalOrders: { $sum: 1 },
+      cancelledOrders: {
+        $sum: { $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0] }
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      cancelledPercentage: {
+        $multiply: [{ $divide: ["$cancelledOrders", "$totalOrders"] }, 100]
+      }
+    }
+  }
+]);
+
+// 6️⃣ Top product category by revenue
+db.orders.aggregate([
+  { $group: { _id: "$category", totalRevenue: { $sum: "$totalPrice" } } },
+  { $sort: { totalRevenue: -1 } },
+  { $limit: 1 }
+]);
+
+// 7️⃣ Most frequently ordered product
+db.orders.aggregate([
+  { $group: { _id: "$productName", orderCount: { $sum: 1 } } },
+  { $sort: { orderCount: -1 } },
+  { $limit: 1 }
+]);
+
+// 8️⃣ Monthly revenue trend
+db.orders.aggregate([
+  {
+    $group: {
+      _id: { $month: { $toDate: "$orderDate" } },
+      monthlyRevenue: { $sum: "$totalPrice" }
+    }
+  },
+  { $sort: { "_id": 1 } },
+  {
+    $project: {
+      _id: 0,
+      month: "$_id",
+      monthlyRevenue: 1
+    }
+  }
+]);
+
+// 9️⃣ Count of orders by status
+db.orders.aggregate([
+  { $group: { _id: "$status", count: { $sum: 1 } } }
+]);
+
+// 🔟 Total number of orders and quantity sold
+db.orders.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalOrders: { $sum: 1 },
+      totalQuantity: { $sum: "$quantity" }
+    }
+  },
+  { $project: { _id: 0, totalOrders: 1, totalQuantity: 1 } }
+]);
